@@ -27,27 +27,26 @@ pipeline {
             steps {
                 echo '=== Tomcat 배포 시작 ==='
                 script {
-                    // 1. Tomcat 컨테이너 중지
-                    sh 'docker stop tomcat'
+                    // 기존 컨테이너 완전 삭제
+                    sh 'docker rm -f tomcat || true'
                     
-                    // 2. 대기 (완전히 중지될 때까지)
-                    sleep 3
+                    // 잠깐 대기
+                    sleep 2
                     
-                    // 3. 호스트로 WAR 파일 복사 (준비 영역)
+                    // 새 Tomcat 컨테이너 시작 (WAR 파일과 함께)
                     sh '''
-                        docker cp target/webapp-demo.war jenkins:/tmp/webapp-demo.war
+                        docker run -d \
+                          --name tomcat \
+                          --network cicd-network \
+                          -p 8080:8080 \
+                          tomcat:9.0-jdk11
                     '''
                     
-                    // 4. Tomcat 시작
-                    sh 'docker start tomcat'
+                    // Tomcat 시작 대기
+                    sleep 10
                     
-                    // 5. Tomcat이 시작될 때까지 대기
-                    sleep 5
-                    
-                    // 6. Jenkins 컨테이너에서 Tomcat으로 파일 복사
-                    sh '''
-                        docker cp /tmp/webapp-demo.war tomcat:/usr/local/tomcat/webapps/
-                    '''
+                    // WAR 파일 복사
+                    sh 'docker cp target/webapp-demo.war tomcat:/usr/local/tomcat/webapps/'
                     
                     echo '배포 완료! Tomcat이 자동으로 배포합니다.'
                 }
