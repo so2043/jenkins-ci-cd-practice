@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Jenkins 컨테이너
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    ports:
+      - "9090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./target:/var/jenkins_home/target  # WAR 파일 공유
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - cicd-network
+
+  # Tomcat 컨테이너
+  tomcat:
+    image: tomcat:9.0-jdk11
+    container_name: tomcat
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./target/webapp-demo.war:/usr/local/tomcat/webapps/webapp-demo.war
+    networks:
+      - cicd-network
+
+volumes:
+  jenkins_home:
+
+networks:
+  cicd-network:
+    driver: bridge
