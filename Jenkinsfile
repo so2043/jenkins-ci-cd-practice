@@ -27,18 +27,22 @@ pipeline {
             steps {
                 echo '=== Tomcat 배포 시작 ==='
                 script {
-                    // 기존 WAR 파일 백업
+                    // Tomcat 컨테이너 재시작
+                    sh 'docker restart tomcat'
+                    
+                    // Tomcat이 완전히 종료될 때까지 대기
+                    sleep 5
+                    
+                    // 기존 WAR 파일 삭제
                     sh '''
                         docker exec tomcat rm -f /usr/local/tomcat/webapps/webapp-demo.war || true
                         docker exec tomcat rm -rf /usr/local/tomcat/webapps/webapp-demo || true
                     '''
                     
                     // 새 WAR 파일 복사
-                    sh '''
-                        docker cp target/webapp-demo.war tomcat:/usr/local/tomcat/webapps/
-                    '''
+                    sh 'docker cp target/webapp-demo.war tomcat:/usr/local/tomcat/webapps/'
                     
-                    echo '배포 완료! 약 10초 후 자동 배포됩니다.'
+                    echo '배포 완료! Tomcat이 자동으로 배포합니다.'
                 }
             }
         }
@@ -48,7 +52,7 @@ pipeline {
                 echo '=== 배포 확인 중 ==='
                 script {
                     sleep 15
-                    sh 'curl -f http://localhost:8080/webapp-demo/ || echo "아직 배포 중..."'
+                    sh 'curl -f http://localhost:8080/webapp-demo/ || echo "배포 진행 중..."'
                 }
             }
         }
