@@ -33,11 +33,10 @@ pipeline {
                     // 잠깐 대기
                     sleep 2
                     
-                    // 새 Tomcat 컨테이너 시작 (WAR 파일과 함께)
+                    // 새 Tomcat 컨테이너 시작
                     sh '''
                         docker run -d \
                           --name tomcat \
-                          --network cicd-network \
                           -p 8080:8080 \
                           tomcat:9.0-jdk11
                     '''
